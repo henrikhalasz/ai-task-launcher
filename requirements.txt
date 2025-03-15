@@ -1,0 +1,6 @@
+openai==1.13.3
+pygetwindow==0.0.9
+requests==2.31.0
+beautifulsoup4==4.12.2
+python-dotenv==1.0.0
+pydantic==2.5.2
