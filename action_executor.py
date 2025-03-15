@@ -1,10 +1,8 @@
 import os
 import subprocess
-import time
-import pygetwindow as gw
 import webbrowser
-import requests
-from bs4 import BeautifulSoup
+import pygetwindow as gw
+import urllib.parse
 from typing import Dict, Any
 
 from app_registry import AppRegistry
@@ -102,77 +100,35 @@ class ActionExecutor:
     
     def _perform_search(self, query: str) -> str:
         """
-        Perform a web search for the given query, open Chrome, and return a summary of results.
+        Perform a web search for the given query and open the results in a browser.
         
         Args:
             query (str): The search query
             
         Returns:
-            str: Summary of search results
+            str: Response message
         """
-        if not query:
+        if not query or query.strip() == "":
             return "I'm not sure what you want me to search for."
         
         try:
-            # Format the query for a search URL - use proper URL encoding
-            import urllib.parse
+            # Format the query for a search URL
             encoded_query = urllib.parse.quote_plus(query)
             search_url = f"https://www.google.com/search?q={encoded_query}"
             
-            # Open Chrome with the search URL
+            # Try to open in Chrome first
             chrome_path = self.app_registry.get_app_path("chrome")
             if chrome_path:
                 try:
-                    # Print debugging info
-                    print(f"Launching Chrome: {chrome_path}")
-                    print(f"Search URL: {search_url}")
-                    
-                    # Use a more robust method to launch Chrome with the URL
                     subprocess.Popen(f'"{chrome_path}" "{search_url}"')
-                except Exception as chrome_error:
-                    print(f"Error launching Chrome: {str(chrome_error)}")
-                    # Fallback to default browser
+                except:
+                    # Fall back to default browser if Chrome fails
                     webbrowser.open(search_url)
             else:
-                # Fallback to default browser if Chrome not found
-                print("Chrome path not found, using default browser")
+                # Use default browser if Chrome isn't found
                 webbrowser.open(search_url)
             
-            # Return a success message immediately
-            return f"I've opened a web search for '{query}'. You can view the results in the browser window."
-            
-            # The code below attempts to fetch and parse the search results, but this is optional
-            # and often doesn't work well due to Google's anti-scraping measures
-            # We're commenting it out for now to ensure the basic functionality works
-            """
-            # Give the page time to load
-            time.sleep(2)
-            
-            # Fetch and parse the search results
-            try:
-                response = requests.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
-                response.raise_for_status()
-                
-                soup = BeautifulSoup(response.text, "html.parser")
-                
-                # Extract search result snippets (this is a simplified approach and may need adjustment)
-                search_results = []
-                for div in soup.find_all("div", class_=["g"]):
-                    snippet = div.find("div", class_="IsZvec")
-                    if snippet:
-                        search_results.append(snippet.get_text())
-                
-                if search_results:
-                    # Combine the first few results into a summary
-                    summary = "\n\n".join(search_results[:3])
-                    return f"I've opened Chrome with your search for '{query}'. Here's a summary of what I found:\n\n{summary}"
-                else:
-                    return f"I've opened Chrome with your search for '{query}', but couldn't generate a summary of the results."
-            
-            except Exception as e:
-                # Still return a successful message even if summarization fails
-                return f"I've opened Chrome with your search for '{query}'. You can view the results in the browser window."
-            """
+            return f"I've opened a search for '{query}' in your browser."
                 
         except Exception as e:
-            return f"Error performing search for '{query}': {str(e)}"
+            return f"Error performing search: {str(e)}"
